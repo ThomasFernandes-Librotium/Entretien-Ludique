@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faisons connaissance — Thomas Fernandes</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg2: #f5f4f0; --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
+      --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22); --radius: 8px; --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1a1a18; --bg2: #242422; --text: #f0efe8; --text2: #a0a09a; --text3: #606058;
+        --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2); }
+    }
+    body { font-family: 'Courier Prime', monospace; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 3rem 1.5rem 4rem; }
+    #app { width: 100%; max-width: 600px; }
+    .screen { display: none; }
+    #intro-screen { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    #intro-screen.active { display: flex; }
+    #list-screen { flex-direction: column; }
+    #list-screen.active { display: flex; }
+    #answer-screen { flex-direction: column; gap: 1.25rem; }
+    #answer-screen.active { display: flex; }
+
+    .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); }
+    .intro-name { font-family: 'DM Serif Display', serif; font-size: 52px; line-height: 1.05; color: var(--text); }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { font-size: 11px; padding: 4px 10px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--text2); letter-spacing: 0.04em; }
+    .intro-accroche { font-size: 14px; color: var(--text2); line-height: 1.9; max-width: 480px; }
+    .intro-contact { display: flex; flex-direction: column; gap: 8px; }
+    .intro-contact-row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+    .intro-contact-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); min-width: 60px; }
+    .intro-contact-row a { color: var(--text2); text-decoration: none; }
+    .intro-contact-row a:hover { color: var(--text); }
+    .intro-contact-row span { color: var(--text2); }
+    .start-btn { margin-top: 0.25rem; padding: 11px 26px; font-family: 'Courier Prime', monospace; font-size: 14px; cursor: pointer; border: 0.5px solid var(--text); border-radius: var(--radius); background: var(--text); color: var(--bg); letter-spacing: 0.04em; transition: opacity 0.15s; }
+    .start-btn:hover { opacity: 0.75; }
+
+    .list-header-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+    .list-header { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); }
+    .q-item { display: flex; align-items: flex-start; gap: 16px; padding: 1rem 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+    .q-item:hover .q-text { color: var(--text); }
+    .q-num { font-size: 11px; color: var(--text3); min-width: 20px; padding-top: 2px; letter-spacing: 0.06em; }
+    .q-text { font-size: 14px; color: var(--text2); line-height: 1.5; flex: 1; transition: color 0.1s; }
+    .q-arrow { font-size: 13px; color: var(--text3); padding-top: 2px; }
+
+    .nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+    .back-btn, .home-btn, .next-btn { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; padding: 0; transition: color 0.1s; }
+    .back-btn:hover, .home-btn:hover, .next-btn:hover { color: var(--text2); }
+    .next-btn { text-align: right; }
+
+    .answer-q { font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1.35; color: var(--text); font-style: italic; }
+    .answer-bubble { background: var(--bg2); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 1.25rem 1.5rem; }
+    .speaker-tag { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 0.6rem; }
+    .answer-text { font-size: 14px; line-height: 1.9; color: var(--text); overflow-wrap: break-word; word-break: break-word; }
+    .answer-text a { color: var(--text2); }
+    .answer-text em { color: var(--text3); font-style: normal; font-size: 13px; }
+    .answer-text .aside { color: var(--text3); font-size: 13px; }
+
+    .followup-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-top: 0.5rem; }
+    .followup-list { display: flex; flex-direction: column; gap: 8px; margin-top: 0.25rem; }
+    .followup-btn { font-family: 'Courier Prime', monospace; font-size: 14px; text-align: left; padding: 10px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text2); cursor: pointer; transition: border-color 0.15s, color 0.15s; line-height: 1.4; }
+    .followup-btn:hover { border-color: var(--text3); color: var(--text); }
+    .followup-answer { background: var(--bg2); border-left: 2px solid var(--border2); padding: 1rem 1.25rem; border-radius: 0 var(--radius) var(--radius) 0; font-size: 14px; line-height: 1.85; color: var(--text); margin-top: 4px; display: none; overflow-wrap: break-word; word-break: break-word; }
+    .followup-answer.open { display: block; }
+    .followup-answer a { color: var(--text2); }
+    .followup-answer em { color: var(--text3); font-style: normal; font-size: 13px; }
+    .followup-answer .aside { color: var(--text3); font-size: 13px; }
+
+    .contact-block { display: flex; flex-direction: column; gap: 14px; }
+    .contact-closing { font-size: 14px; color: var(--text2); line-height: 1.8; padding-bottom: 0.75rem; border-bottom: 0.5px solid var(--border); }
+    .contact-row { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+    .contact-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); min-width: 64px; }
+    .contact-row a { color: var(--text2); text-decoration: none; }
+    .contact-row a:hover { color: var(--text); }
+    .contact-note { font-size: 12px; color: var(--text3); padding-top: 0.25rem; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="intro-screen" class="screen active">
+    <span class="eyebrow">Faites connaissance</span>
+    <h1 class="intro-name">Thomas<br>Fernandes</h1>
+    <div class="tag-row">
+      <span class="tag">Matériaux composites</span>
+      <span class="tag">R&D</span>
+      <span class="tag">Coordination de projets</span>
+      <span class="tag">Transition écologique</span>
+    </div>
+    <p class="intro-accroche"> Une courte introduction interactive (≈3 minutes) pour mieux me connaître avant un vrai échange.</p>
+    <div class="intro-contact">
+      <div class="intro-contact-row"><span class="intro-contact-label">Email</span><a href="mailto:thomasfernandes33@yahoo.com">thomasfernandes33@yahoo.com</a></div>
+      <div class="intro-contact-row"><span class="intro-contact-label">Tel</span><span>+33 7 82 79 93 92</span></div>
+      <div class="intro-contact-row"><span class="intro-contact-label">LinkedIn</span><a href="https://www.linkedin.com/in/thomas-fernandes-56aa9a154/" target="_blank">linkedin.com/in/thomas-fernandes</a></div>
+    </div>
+    <button class="start-btn" onclick="showList()">Commencer →</button>
+  </div>
+
+  <div id="list-screen" class="screen">
+    <div class="list-header-row">
+      <span class="list-header">Choisissez une question</span>
+      <button class="home-btn" onclick="showIntro()">← accueil</button>
+    </div>
+    <div id="q-list"></div>
+  </div>
+
+  <div id="answer-screen" class="screen">
+    <div class="nav-row">
+      <div class="nav-left">
+        <button class="back-btn" onclick="showList()">← questions</button>
+        <button class="home-btn" onclick="showIntro()">accueil</button>
+      </div>
+      <button class="next-btn" id="next-btn" onclick="goNext()"></button>
+    </div>
+    <p class="answer-q" id="a-question"></p>
+    <div class="answer-bubble" id="a-bubble"></div>
+    <p class="followup-label" id="fu-label"></p>
+    <div class="followup-list" id="fu-list"></div>
+  </div>
+
+</div>
+
+<script>
+let currentIndex = 0;
+
+function getDatetime2031() {
+  const now = new Date();
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear() + 5;
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${day} ${month} ${year} à ${hours}h${minutes}`;
+}
+
+const data = [
+  {
+    q: "Qu'est-ce que vous recherchez dans un travail ?",
+    a: "Un travail où je sens que je contribue à quelque chose d'utile et qui m'intéresse. C'est assez général comme critères donc un bon moyen de trouver, c'est de suivre son agacement. Le bon agacement, celui qui fait qu'on veut faire fonctionner quelque chose qui ne fonctionne pas encore. Il faut aussi que ce soit compatible avec mes autres contraintes.",
+    followups: [
+      {
+        q: "Ah bon, vous ne voulez pas un job qui vous plaît plutôt ?",
+        a: "Ce qu'on aime, c'est pour apprécier. Ce qu'on ne peut pas s'empêcher de vouloir corriger, c'est pour agir. Pour moi, la vraie question qui montre qui persévérera et ce qui rendra un succès vraiment satisfaisant n'est pas \"qu'est-ce qui vous plaît\", mais \"qu'est-ce que vous ne pouvez pas laisser en l'état\"."
+      },
+      {
+        q: "Mais qu'est-ce qui vous agace alors ?",
+        a: "Les solutions et les produits qui s'arrêtent au suffisant faute de coordination ou d'incitation à faire mieux. Chacun optimise son périmètre, personne n'est responsable de l'ensemble. Ce qu'on appelle la tragédie des communs."
+      },
+      {
+        q: "C'est quoi vos autres contraintes ?",
+        a: "Une seule en fait, géographique : Rhône-Alpes, Suisse romande, Bruxelles. Je ne vous demande pas de trouver l'intrus. <span class='aside'>(Si vous avez reçu une candidature en dehors de cette zone, félicitations ! Votre offre dépasse mes contraintes.)</span>"
+      }
+    ]
+  },
+  {
+    q: "Comment abordez-vous un problème ?",
+    a: "Je commence par le reformuler et à essayer de l'expliquer, parfois à moi-même. Ça révèle assez bien le niveau de compréhension et les hypothèses. D'ailleurs parfois le problème c'est qu'on ne se pose pas la bonne question.",
+    followups: [
+      {
+        q: "Vous pouvez donner un exemple concret ?",
+        a: "Chez NTPT, la transition environnementale est partie de \"comment faire une résine qui baisse l'impact environnemental des composites\". Il se trouve que faire baisser l'impact du composite ce n'est pas principalement la résine. Il se trouve aussi que faire baisser l'impact du composite ce n'est pas exactement comme faire baisser l'impact de l'entreprise. Autrement dit le problème n'était ni chimique ni technique, ce qui devient apparent quand on prend le temps de reformuler. Il manquait une vision globale pour identifier les leviers d'action."
+      }
+    ]
+  },
+  {
+    q: "Pourquoi vous ?",
+    a: "Je réponds rarement à cette question sans en poser d'autres avant. Un bon fit se découvre en échangeant, pas en se vendant dans l'abstrait. Je ne prétends pas être la meilleure option dans toutes les situations. C'est via ma lettre de motivation que j'explique pourquoi je pense que c'est un bon fit dans notre cas. Je serais heureux d'en fournir une si notre prise de contact ne l'a pas permis.",
+    followups: []
+  },
+  {
+    q: "3 qualités, 3 défauts ?",
+    a: "Ah, la fameuse question ! Je ne savais pas si on la posait encore.",
+    followups: [
+      {
+        q: "Je peux le formuler différemment si vous préférez : vos collègues vous décriraient comment ?",
+        a: "Bon esprit critique, vue technique et d'ensemble, efficace. Disponible pour aider ou échanger. <em>(C'est ce qu'ils disent, pas moi.)</em>"
+      },
+      {
+        q: "Vous n'avez pas oublié les défauts ?",
+        a: "Ils ne m'ont rien dit, je crois qu'il faut que vous leur demandiez directement. <em>(Références disponibles sur demande.)</em>"
+      }
+    ]
+  },
+  {
+    q: "On a besoin de quelqu'un qui pilote par les données, vous êtes à l'aise avec ça ?",
+    a: "Sans mesure on se perd. Mais quand la mesure devient l'objectif, on se perd aussi.",
+    followups: [
+      {
+        q: "Vous avez trouvé ça dans un Carambar ?",
+        a: "Les chiffres, ça permet de partager, de faire des calculs et de comparer. Donc la mesure est souvent essentielle à plusieurs niveaux, mais c'est aussi ce qui la rend omniprésente. Et si on ne fait pas attention on optimise la mesure plutôt que l'objectif. Sinon je suis à l'aise, oui."
+      }
+    ]
+  },
+  {
+    q: "Où vous voyez-vous dans 5 ans ?",
+    a: null,
+    datetime: true,
+    followups: [
+      {
+        q: "Non mais vous avez compris.",
+        a: "Si je postule c'est que je peux me projeter dans ce poste durablement. Par contre je ne sais même pas encore si je vais avoir un entretien avec vous dans les prochaines semaines, de là à prédire dans 5 ans..."
+      }
+    ]
+  },
+  {
+    q: "J'ai adoré cet entretien, rappelez-moi comment vous joindre ?",
+    contact: true,
+    followups: []
+  }
+];
+
+function showIntro() {
+  ['intro-screen','list-screen','answer-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  const intro = document.getElementById('intro-screen');
+  intro.style.display = 'flex';
+  intro.classList.add('active');
+}
+
+function showList() {
+  ['intro-screen','list-screen','answer-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  const ls = document.getElementById('list-screen');
+  ls.style.display = 'flex';
+  ls.classList.add('active');
+  const list = document.getElementById('q-list');
+  list.innerHTML = '';
+  data.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'q-item';
+    const num = String(i + 1).padStart(2, '0');
+    div.innerHTML = `<span class="q-num">${num}</span><span class="q-text">${item.q}</span><span class="q-arrow">→</span>`;
+    div.onclick = () => showAnswer(i);
+    list.appendChild(div);
+  });
+}
+
+function goNext() {
+  if (currentIndex < data.length - 1) showAnswer(currentIndex + 1);
+}
+
+function showAnswer(i) {
+  currentIndex = i;
+  const item = data[i];
+  ['intro-screen','list-screen','answer-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+
+  document.getElementById('a-question').textContent = item.q;
+
+  const nextBtn = document.getElementById('next-btn');
+  if (i < data.length - 1) {
+    const nextNum = String(i + 2).padStart(2, '0');
+    const nextQ = data[i + 1].q;
+    const short = nextQ.length > 35 ? nextQ.substring(0, 35) + '...' : nextQ;
+    nextBtn.textContent = 'Question ' + nextNum + ' : ' + short + ' →';
+    nextBtn.style.display = 'inline';
+  } else {
+    nextBtn.style.display = 'none';
+  }
+
+  const bubble = document.getElementById('a-bubble');
+
+  if (item.contact) {
+    bubble.innerHTML = `
+      <div class="contact-block">
+        <div class="contact-closing">N'hésitez pas, rien ne remplace un vrai échange. Et cette fois, vous pourrez choisir les questions !</div>
+        <div class="contact-row"><span class="contact-label">Email</span><a href="mailto:thomasfernandes33@yahoo.com">thomasfernandes33@yahoo.com</a></div>
+        <div class="contact-row"><span class="contact-label">Tel</span><span>+33 7 82 79 93 92</span></div>
+        <div class="contact-row"><span class="contact-label">LinkedIn</span><a href="https://www.linkedin.com/in/thomas-fernandes-56aa9a154/" target="_blank">linkedin.com/in/thomas-fernandes</a></div>
+        <p class="contact-note">CV et références disponibles sur demande.</p>
+      </div>`;
+  } else if (item.datetime) {
+    const dt = getDatetime2031();
+    bubble.innerHTML = `<p class="speaker-tag">Thomas</p><p class="answer-text">Le ${dt} ?</p>`;
+  } else {
+    bubble.innerHTML = `<p class="speaker-tag">Thomas</p><p class="answer-text">${item.a}</p>`;
+  }
+
+  const fuLabel = document.getElementById('fu-label');
+  const fuList = document.getElementById('fu-list');
+  fuList.innerHTML = '';
+
+  if (item.followups && item.followups.length > 0) {
+    fuLabel.textContent = 'Creuser le sujet';
+    item.followups.forEach(fu => {
+      const btn = document.createElement('button');
+      btn.className = 'followup-btn';
+      btn.textContent = fu.q;
+      const ans = document.createElement('div');
+      ans.className = 'followup-answer';
+      ans.innerHTML = fu.a;
+      btn.onclick = () => {
+        const isOpen = ans.classList.contains('open');
+        fuList.querySelectorAll('.followup-answer').forEach(a => a.classList.remove('open'));
+        fuList.querySelectorAll('.followup-btn').forEach(b => b.style.color = '');
+        if (!isOpen) {
+          ans.classList.add('open');
+          btn.style.color = 'var(--text)';
+        }
+      };
+      fuList.appendChild(btn);
+      fuList.appendChild(ans);
+    });
+  } else {
+    fuLabel.textContent = '';
+  }
+
+  const as = document.getElementById('answer-screen');
+  as.style.display = 'flex';
+  as.classList.add('active');
+}
+</script>
+</body>
+</html>
